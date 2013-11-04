@@ -1,3 +1,11 @@
+/*
+ * File: Game.cpp
+ * Author: Curtis Smith 1851450
+ * Course: COSC 3F00
+ * Assignment: 2 
+ * Due Date: Nov. 4th, 2013 4PM ET
+ */
+
 #include "Game.h"
 #include <ctime>
 #include <cstdlib>

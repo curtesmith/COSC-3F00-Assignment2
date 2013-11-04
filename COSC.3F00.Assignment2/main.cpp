@@ -1,39 +1,26 @@
+/*
+ * File: main.cpp
+ * Author: Curtis Smith 1851450
+ * Course: COSC 3F00
+ * Assignment: 2 
+ * Due Date: Nov. 4th, 2013 4PM ET
+ */
+
 #include <cstdlib>
 #include <iostream>
 #include <ctime>
+#include "main.h"
 #include "Game.h"
 #include <list>
 #include <thread>
 
-#define MAX_MOVES 24
-#define NUMBER_OF_WINNING_ALIGNMENTS 38
-#define NUMBER_OF_SPACES 24
-
 using namespace std;
-
-string spaces[NUMBER_OF_SPACES] = {"F", "G", "H", "D", "E", "A", "B", "C", "F", 
-        "G", "H", "D", "E", "A", "B", "C", "F", "G", "H", "D", "E", "A", "B", "C"};
-
-int winningAlignments[NUMBER_OF_WINNING_ALIGNMENTS][3] = {{0, 1, 2}, {5, 6, 7},
-    {8, 9, 10}, {13, 14, 15}, {16, 17, 18}, {21, 22, 23}, {0, 3, 6}, {1, 4, 7},
-    {8, 11, 14}, {9, 12, 15}, {16, 19, 22}, {17, 22, 23}, {1, 3, 5}, {2, 4, 6},
-    {9, 11, 13}, {10, 12, 14}, {17, 19, 21}, {18, 20, 22}, {0, 8, 16}, {1, 9, 17},
-    {2, 10, 18}, {3, 11, 19}, {4, 12, 20}, {5, 13, 21}, {6, 14, 22}, {7, 15, 23},
-    {0, 9, 18}, {5, 14, 23}, {2, 9, 16}, {7, 14, 21}, {0, 11, 22}, {1, 12, 23},
-    {6, 11, 16}, {7, 12, 17}, {1, 11, 21}, {2, 12, 22}, {5, 11, 17}, {6, 12, 18}};
-
-int playersMoves[MAX_MOVES / 2];
-int opponentsMoves[MAX_MOVES / 2];
-int playerCurrentMove, opponentCurrentMove = 0;
-int playerWins, opponentWins = 0;
-list<int> board;
-Game game;
 
 bool isValidMove(int move) {
     if (move < 0) {
         return false;
     } else {
-        return spaces[move] != "X" && spaces[move] != "O";
+        return gameBoard[move] != "X" && gameBoard[move] != "O";
     }
 }
 
@@ -48,7 +35,7 @@ int resolveMove(int move) {
 
     if (isValidMove(move)) {
         resolvedMove = move;
-    } else if (move + 8 < NUMBER_OF_SPACES) {
+    } else if (move + 8 < NUMBER_OF_POSITIONS) {
         resolvedMove = resolveMove(move + 8);
     }
 
@@ -123,35 +110,35 @@ void displayGameInterface() {
     }
     cout << endl;
 
-    cout << "|" << spaces[0] << "|" << spaces[1] << "|" << spaces[2] << "|\t"
-            << "|" << spaces[8] << "|" << spaces[9] << "|" << spaces[10] << "|\t"
-            << "|" << spaces[16] << "|" << spaces[17] << "|" << spaces[18] << "|" << endl;
+    cout << "|" << gameBoard[0] << "|" << gameBoard[1] << "|" << gameBoard[2] << "|\t"
+            << "|" << gameBoard[8] << "|" << gameBoard[9] << "|" << gameBoard[10] << "|\t"
+            << "|" << gameBoard[16] << "|" << gameBoard[17] << "|" << gameBoard[18] << "|" << endl;
 
     for (int i = 1; i < 4; i++) {
         cout << " - - - \t";
     }
     cout << endl;
 
-    cout << " |" << spaces[3] << "|" << spaces[4] << "|\t"
-            << " |" << spaces[11] << "|" << spaces[12] << "|\t"
-            << " |" << spaces[19] << "|" << spaces[20] << "|" << endl;
+    cout << " |" << gameBoard[3] << "|" << gameBoard[4] << "|\t"
+            << " |" << gameBoard[11] << "|" << gameBoard[12] << "|\t"
+            << " |" << gameBoard[19] << "|" << gameBoard[20] << "|" << endl;
 
     for (int i = 1; i < 4; i++) {
         cout << " - - - \t";
     }
     cout << endl;
 
-    cout << "|" << spaces[5] << "|" << spaces[6] << "|" << spaces[7] << "|\t"
-            << "|" << spaces[13] << "|" << spaces[14] << "|" << spaces[15] << "|\t"
-            << "|" << spaces[21] << "|" << spaces[22] << "|" << spaces[23] << "|" << endl;
+    cout << "|" << gameBoard[5] << "|" << gameBoard[6] << "|" << gameBoard[7] << "|\t"
+            << "|" << gameBoard[13] << "|" << gameBoard[14] << "|" << gameBoard[15] << "|\t"
+            << "|" << gameBoard[21] << "|" << gameBoard[22] << "|" << gameBoard[23] << "|" << endl;
 
     for (int i = 1; i < 4; i++) {
         cout << " - - - \t";
     }
     cout << endl << endl;
 
-    cout << "You have " << playerWins << " winning alignments" << endl;
-    cout << "Your opponent has " << opponentWins << " winning alignments" << endl;
+    cout << "You have " << playersScore << " winning alignments" << endl;
+    cout << "Your opponent has " << opponentsScore << " winning alignments" << endl;
 }
 
 int countWinningAlignments(int moves[]) {
@@ -180,22 +167,22 @@ int countWinningAlignments(int moves[]) {
 
 void tallyAlignments(bool isPlayer, int move) {
     if (isPlayer) {
-        spaces[move] = "X";
+        gameBoard[move] = "X";
         playersMoves[playerCurrentMove] = move;
-        playerWins = countWinningAlignments(playersMoves);
+        playersScore = countWinningAlignments(playersMoves);
         playerCurrentMove++;
     } else {
-        spaces[move] = "O";
+        gameBoard[move] = "O";
         opponentsMoves[opponentCurrentMove] = move;
-        opponentWins = countWinningAlignments(opponentsMoves);
+        opponentsScore = countWinningAlignments(opponentsMoves);
         opponentCurrentMove++;
     }
 }
 
 void announceWinner() {
-    if (playerWins > opponentWins) {
+    if (playersScore > opponentsScore) {
         cout << "CONGRATULATIONS, YOU WIN!!!" << endl;
-    } else if (playerWins == opponentWins) {
+    } else if (playersScore == opponentsScore) {
         cout << "Tie game." << endl;
     } else {
         cout << "Sorry, you lose." << endl;
