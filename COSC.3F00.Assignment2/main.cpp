@@ -59,19 +59,19 @@ int convertAlphaMove(string alphaMove) {
     int result = -1;
     if (alphaMove == "F") {
         result = resolveMove(0);
-    } else if (alphaMove == "G") {
+    } else if (alphaMove == "G" || alphaMove == "g") {
         result = resolveMove(1);
-    } else if (alphaMove == "H") {
+    } else if (alphaMove == "H" || alphaMove == "h") {
         result = resolveMove(2);
-    } else if (alphaMove == "D") {
+    } else if (alphaMove == "D" || alphaMove == "d") {
         result = resolveMove(3);
-    } else if (alphaMove == "E") {
+    } else if (alphaMove == "E" || alphaMove == "e") {
         result = resolveMove(4);
-    } else if (alphaMove == "A") {
+    } else if (alphaMove == "A" || alphaMove == "a") {
         result = resolveMove(5);
-    } else if (alphaMove == "B") {
+    } else if (alphaMove == "B" || alphaMove == "b") {
         result = resolveMove(6);
-    } else if (alphaMove == "C") {
+    } else if (alphaMove == "C" || alphaMove == "c") {
         result = resolveMove(7);
     } else {
         result = -1;
