@@ -9,10 +9,27 @@
 #include <cstdlib>
 #include <iostream>
 #include <ctime>
-#include "main.h"
-#include "Game.h"
 #include <list>
 #include <thread>
+#include "main.h"
+#include "Game.h"
+#include "Player.h"
+
+std::string gameBoard[NUMBER_OF_POSITIONS] = {"F", "G", "H", "D", "E", "A", "B", "C", "F", 
+        "G", "H", "D", "E", "A", "B", "C", "F", "G", "H", "D", "E", "A", "B", "C"};
+
+int winningAlignments[NUMBER_OF_WINNING_ALIGNMENTS][3] = {{0, 1, 2}, {5, 6, 7},
+    {8, 9, 10}, {13, 14, 15}, {16, 17, 18}, {21, 22, 23}, {0, 3, 6}, {1, 4, 7},
+    {8, 11, 14}, {9, 12, 15}, {16, 19, 22}, {17, 22, 23}, {1, 3, 5}, {2, 4, 6},
+    {9, 11, 13}, {10, 12, 14}, {17, 19, 21}, {18, 20, 22}, {0, 8, 16}, {1, 9, 17},
+    {2, 10, 18}, {3, 11, 19}, {4, 12, 20}, {5, 13, 21}, {6, 14, 22}, {7, 15, 23},
+    {0, 9, 18}, {5, 14, 23}, {2, 9, 16}, {7, 14, 21}, {0, 11, 22}, {1, 12, 23},
+    {6, 11, 16}, {7, 12, 17}, {1, 11, 21}, {2, 12, 22}, {5, 11, 17}, {6, 12, 18}};
+
+std::list<int> availablePegs;
+Game game;
+Player player;
+Player opponent;
 
 using namespace std;
 
@@ -24,9 +41,9 @@ bool isValidMove(int move) {
     }
 }
 
-void updateBoard(int move) {
+void updateAvailablePegs(int move) {
     if (move >= 16) {
-        board.remove(move - 16);
+        availablePegs.remove(move - 16);
     }
 }
 
@@ -44,7 +61,7 @@ int resolveMove(int move) {
 
 int convertAlphaMove(string alphaMove) {
     int result = -1;
-    if (alphaMove == "F") {
+    if (alphaMove == "F" || alphaMove == "f") {
         result = resolveMove(0);
     } else if (alphaMove == "G" || alphaMove == "g") {
         result = resolveMove(1);
@@ -67,7 +84,7 @@ int convertAlphaMove(string alphaMove) {
     return result;
 }
 
-int dialog(bool isPlayersTurn) {
+int askWhatIsNextMove(bool isPlayersTurn) {
     int move = 0;
     bool isDone = false;
     while (!isDone) {
@@ -77,20 +94,18 @@ int dialog(bool isPlayersTurn) {
             cin >> alphaMove;
             move = convertAlphaMove(alphaMove);
         } else {
-            //TODO: add a mutex and lock here
             move = resolveMove(game.getNextMove());
         }
         if (isValidMove(move))
             isDone = true;
     }
-    updateBoard(move);
+    updateAvailablePegs(move);
     if(isPlayersTurn) {
-        game.setBoard(board);
+        game.setAvailablePegs(availablePegs);
         game.notify();
     }
     return move;
 }
-
 
 void displayGameInterface() {
     system("CLS");
@@ -137,8 +152,8 @@ void displayGameInterface() {
     }
     cout << endl << endl;
 
-    cout << "You have " << playersScore << " winning alignments" << endl;
-    cout << "Your opponent has " << opponentsScore << " winning alignments" << endl;
+    cout << "You have " << player.getScore() << " winning alignments" << endl;
+    cout << "Your opponent has " << opponent.getScore() << " winning alignments" << endl;
 }
 
 int countWinningAlignments(int moves[]) {
@@ -168,21 +183,19 @@ int countWinningAlignments(int moves[]) {
 void tallyAlignments(bool isPlayer, int move) {
     if (isPlayer) {
         gameBoard[move] = "X";
-        playersMoves[playerCurrentMove] = move;
-        playersScore = countWinningAlignments(playersMoves);
-        playerCurrentMove++;
+        player.setNextMove(move);
+        player.setScore(countWinningAlignments(player.getMoves()));
     } else {
         gameBoard[move] = "O";
-        opponentsMoves[opponentCurrentMove] = move;
-        opponentsScore = countWinningAlignments(opponentsMoves);
-        opponentCurrentMove++;
+        opponent.setNextMove(move);
+        opponent.setScore(countWinningAlignments(opponent.getMoves()));
     }
 }
 
 void announceWinner() {
-    if (playersScore > opponentsScore) {
+    if (player.getScore() > opponent.getScore()) {
         cout << "CONGRATULATIONS, YOU WIN!!!" << endl;
-    } else if (playersScore == opponentsScore) {
+    } else if (player.getScore() == opponent.getScore()) {
         cout << "Tie game." << endl;
     } else {
         cout << "Sorry, you lose." << endl;
@@ -190,22 +203,13 @@ void announceWinner() {
 
 }
 
-bool endGame(int num) {
+bool endOfGame(int num) {
     return num == MAX_MOVES;
 }
 
-void initializeBoard() {
+void initializeAvailablePegs() {
     for (int i = 0; i < 8; i++) {
-        board.push_back(i);
-    }
-}
-
-void initialize() {
-    initializeBoard();
-    
-    for(int i=0; i<MAX_MOVES/2; i++) {
-        playersMoves[i] = -1;
-        opponentsMoves[i] = -1;
+        availablePegs.push_back(i);
     }
 }
 
@@ -223,14 +227,14 @@ void startGame() {
 }
 
 int main(int argc, char** argv) {
-    initialize();
+    initializeAvailablePegs();
     bool isPlayersTurn = wouldYouLikeToGoFirst();
     thread gameThread(startGame);
     int i = 0;
     
-    while (!endGame(i)) {
+    while (!endOfGame(i)) {
         displayGameInterface();
-        int move = dialog(isPlayersTurn);
+        int move = askWhatIsNextMove(isPlayersTurn);
         tallyAlignments(isPlayersTurn, move);
         isPlayersTurn = !isPlayersTurn;
         i++;

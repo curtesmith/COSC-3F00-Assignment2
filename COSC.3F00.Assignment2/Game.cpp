@@ -23,23 +23,23 @@ Game::~Game() {
 }
 
 void Game::start() {
-    std::unique_lock<std::mutex> lck(mtx);
+    std::unique_lock<std::mutex> lck(mut);
     running = true;
     while (running) {
-        cv.wait(lck);
+        conditionVar.wait(lck);
         if (running) {
-            calculateNextMove(board);
+            calculateNextMove();
         }
     }
 }
 
-void Game::setBoard(std::list<int> value) {
-    board = value;
+void Game::setAvailablePegs(std::list<int> value) {
+    availablePegs = value;
 }
 
 void Game::notify() {
-    std::unique_lock<std::mutex> lck(mtx);
-    cv.notify_one();
+    std::unique_lock<std::mutex> lck(mut);
+    conditionVar.notify_one();
 }
 
 void Game::stop() {
@@ -50,8 +50,8 @@ int Game::getNextMove() {
     return nextMove;
 }
 
-void Game::calculateNextMove(std::list<int> board) {
-    int numberOfMovesRemaining = getNumberOfMovesRemaining(board);
+void Game::calculateNextMove() {
+    int numberOfMovesRemaining = getNumberOfMovesRemaining();
     int move;
 
     if (numberOfMovesRemaining == 1) {
@@ -61,18 +61,18 @@ void Game::calculateNextMove(std::list<int> board) {
         move = rand() % (numberOfMovesRemaining - 1);
     }
 
-    std::list<int>::iterator pos = board.begin();
+    std::list<int>::iterator pos = availablePegs.begin();
     std::advance(pos, move);
     nextMove = *pos;
 }
 
-int Game::getNumberOfMovesRemaining(std::list<int> board) {
+int Game::getNumberOfMovesRemaining() {
     int result = 0;
 
-    if (board.size() >= 8) {
+    if (availablePegs.size() >= 8) {
         result = 8;
-    } else if (board.size() < 8) {
-        result = board.size();
+    } else if (availablePegs.size() < 8) {
+        result = availablePegs.size();
     }
 
     return result;
